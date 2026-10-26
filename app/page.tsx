@@ -172,6 +172,7 @@ export default function Home() {
           plan,
           userId: user.id,
           userEmail: user.email,
+          clientOrigin: window.location.origin,
         }),
       });
 

@@ -11,7 +11,7 @@ const snap = new midtransClient.Snap({
 
 export async function POST(request: Request) {
   try {
-    const { plan, userId, userEmail } = await request.json();
+    const { plan, userId, userEmail, clientOrigin } = await request.json();
 
     if (!plan || !userId) {
       return NextResponse.json(
@@ -35,18 +35,16 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    // Deteksi origin dinamis: jika di Vercel pakai domain Vercel, jika lokal pakai localhost
     const origin =
+      clientOrigin ||
       request.headers.get("origin") ||
       request.headers.get("referer") ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
     const cleanOrigin = origin.replace(/\/$/, "");
 
-    // 4. Generate Order ID unik
     const orderId = `ALIBI-${plan.toUpperCase()}-${Date.now()}-${userId.slice(0, 5)}`;
 
-    // 5. Susun parameter transaksi Midtrans
     const parameter = {
       transaction_details: {
         order_id: orderId,
@@ -67,7 +65,6 @@ export async function POST(request: Request) {
       custom_field1: userId,
       custom_field2: plan,
 
-      // Redirect dinamis mengikuti website tempat user sedang membuka aplikasi
       callbacks: {
         finish: cleanOrigin,
       },
